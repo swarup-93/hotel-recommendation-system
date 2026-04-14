@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DineAI – Restaurant Recommendation System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="#">🍽️ DineAI</a>
+    <ul class="nav-links">
+      <li><a href="#hero" class="active">Home</a></li>
+      <li><a href="#scenarios">Scenarios</a></li>
+      <li><a href="#recommend-section">Recommend</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <span class="pill">✨ AI-Powered Dining Discovery</span>
+    <h1>Find Your Perfect <br/><span class="gradient-text">Restaurant</span></h1>
+    <p class="hero-sub">Personalised recommendations powered by NLP & cosine similarity — tailored to your taste, location, and budget.</p>
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder="Search a restaurant you love…" autocomplete="off"/>
+      <ul class="autocomplete-list" id="heroAutoList"></ul>
+      <button id="heroBtn" class="btn-primary">Get Recommendations</button>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">50K+</span><span class="stat-label">Restaurants</span></div>
+    <div class="stat"><span class="stat-num">4.8★</span><span class="stat-label">Avg Rating</span></div>
+    <div class="stat"><span class="stat-num">3</span><span class="stat-label">User Scenarios</span></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ SCENARIOS ═══════════════════ -->
+<section class="scenarios" id="scenarios">
+  <div class="container">
+    <div class="section-header">
+      <span class="pill">Use Cases</span>
+      <h2>Who Is It For?</h2>
+      <p>Three real-world scenarios where DineAI delivers value</p>
+    </div>
+    <div class="cards-grid">
+
+      <div class="scenario-card" data-scenario="visitor">
+        <div class="card-icon">👤</div>
+        <h3>Restaurant Visitors</h3>
+        <p>Discover new dining experiences that perfectly match your individual taste, cuisine preferences, and budget.</p>
+        <ul>
+          <li>✓ Personalised recommendations</li>
+          <li>✓ Filter by cuisine &amp; cost</li>
+          <li>✓ Similar restaurant finder</li>
+        </ul>
+        <button class="btn-outline" onclick="scrollToRecommend('visitor')">Try as Visitor →</button>
+      </div>
+
+      <div class="scenario-card featured" data-scenario="owner">
+        <div class="card-badge">Most Popular</div>
+        <div class="card-icon">🏪</div>
+        <h3>Restaurant Owners</h3>
+        <p>Understand your competitive landscape — see similar restaurants and optimise your marketing &amp; promotions.</p>
+        <ul>
+          <li>✓ Competitor analysis</li>
+          <li>✓ Target customer segments</li>
+          <li>✓ Improve retention</li>
+        </ul>
+        <button class="btn-outline" onclick="scrollToRecommend('owner')">Try as Owner →</button>
+      </div>
+
+      <div class="scenario-card" data-scenario="delivery">
+        <div class="card-icon">🚗</div>
+        <h3>Food Delivery Platforms</h3>
+        <p>Embed smart recommendations into your delivery app to increase order volume and customer satisfaction.</p>
+        <ul>
+          <li>✓ Location-aware results</li>
+          <li>✓ Increase order volume</li>
+          <li>✓ Reduce decision fatigue</li>
+        </ul>
+        <button class="btn-outline" onclick="scrollToRecommend('delivery')">Try as Platform →</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ RECOMMENDER ═══════════════════ -->
+<section class="recommend-section" id="recommend-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="pill" id="scenarioPill">🔍 Recommendation Engine</span>
+      <h2>Get Your Recommendations</h2>
+      <p>Enter a restaurant you enjoy — we'll find similar ones using AI</p>
+    </div>
+
+    <div class="recommender-box">
+      <div class="search-row">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="mainSearch" placeholder="Type a restaurant name…" autocomplete="off"/>
+          <ul class="autocomplete-list" id="mainAutoList"></ul>
+        </div>
+        <button class="btn-primary" id="mainBtn">Find Similar</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <label>Max Cost (₹): <input type="range" id="costFilter" min="100" max="2000" value="2000" step="50"/>
+          <span id="costVal">₹2000</span></label>
+        <label>Min Rating: <input type="range" id="ratingFilter" min="1" max="5" value="1" step="0.5"/>
+          <span id="ratingVal">1.0 ★</span></label>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsArea" class="results-area hidden">
+        <div class="results-header">
+          <h3 id="resultsTitle">Top Recommendations</h3>
+          <span id="resultsCount" class="pill"></span>
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </div>
+
+      <div id="errorArea" class="error-area hidden">
+        <span class="error-icon">⚠️</span>
+        <p id="errorMsg"></p>
+      </div>
+
+      <div id="loadingArea" class="loading-area hidden">
+        <div class="spinner"></div>
+        <p>Finding the best restaurants for you…</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ARCHITECTURE ═══════════════════ -->
+<section class="architecture" id="about">
+  <div class="container">
+    <div class="section-header">
+      <span class="pill">Under the Hood</span>
+      <h2>How It Works</h2>
+    </div>
+    <div class="arch-steps">
+      <div class="arch-step">
+        <div class="step-num">1</div>
+        <h4>Data Collection</h4>
+        <p>Zomato restaurant data including reviews, cuisines, ratings and cost</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">
+        <div class="step-num">2</div>
+        <h4>NLP Processing</h4>
+        <p>TF-IDF vectorisation of reviews with stop-word removal &amp; cleaning</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">
+        <div class="step-num">3</div>
+        <h4>Cosine Similarity</h4>
+        <p>Compute pairwise similarity scores across all restaurants</p>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-step">
+        <div class="step-num">4</div>
+        <h4>Recommendations</h4>
+        <p>Return top-10 most similar restaurants sorted by Mean Rating</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <p>🍽️ <strong>DineAI</strong> — Restaurant Recommendation System &nbsp;|&nbsp; Built with Flask + TF-IDF + Cosine Similarity</p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
